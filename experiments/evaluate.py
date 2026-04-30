@@ -32,15 +32,19 @@ from AlphaEdit.AlphaEdit_main import apply_AlphaEdit_to_model, get_cov
 from rome import ROMEHyperParams, apply_rome_to_model
 from util import nethook
 from util.globals import *
-from nse import NSEHyperParams
-from nse.nse_main import apply_nse_to_model
+try:
+    from nse import NSEHyperParams
+    from nse.nse_main import apply_nse_to_model
+    _NSE_AVAILABLE = True
+except ImportError:
+    _NSE_AVAILABLE = False
 from glue_eval.glue_eval import GLUEEval
 ALG_DICT = {
     "AlphaEdit": (AlphaEditHyperParams, apply_AlphaEdit_to_model),
     "MEMIT_seq": (MEMITHyperParams, apply_memit_seq_to_model),
     "MEMIT_prune": (MEMITHyperParams, apply_memit_to_model),
     "MEMIT_rect": (MEMITHyperParams, apply_memit_rect_to_model),
-    "NSE": (NSEHyperParams, apply_nse_to_model),
+    **({"NSE": (NSEHyperParams, apply_nse_to_model)} if _NSE_AVAILABLE else {}),
     "MEMIT": (MEMITHyperParams, apply_memit_to_model),
     "ROME": (ROMEHyperParams, apply_rome_to_model),
     "FT": (FTHyperParams, apply_ft_to_model),
@@ -98,26 +102,26 @@ def main(
     if "MEMIT" in alg_name:
     # Get run hyperparameters
         params_path = (
-            run_dir / "params.json"
+            run_dir / "000_params.json"
             if continue_from_run is not None
             else HPARAMS_DIR / "MEMIT" / hparams_fname
         )
     elif "PMET" in alg_name:
     # Get run hyperparameters
         params_path = (
-            run_dir / "params.json"
+            run_dir / "000_params.json"
             if continue_from_run is not None
             else HPARAMS_DIR / "PMET" / hparams_fname
         )
     else:
         params_path = (
-            run_dir / "params.json"
+            run_dir / "000_params.json"
             if continue_from_run is not None
             else HPARAMS_DIR / alg_name / hparams_fname
         )
     hparams = params_class.from_json(params_path)
-    if not (run_dir / "params.json").exists():
-        shutil.copyfile(params_path, run_dir / "params.json")
+    if not (run_dir / "000_params.json").exists():
+        shutil.copyfile(params_path, run_dir / "000_params.json")
     print(f"Executing {alg_name} with parameters {hparams}")
 
     # Instantiate vanilla model
@@ -472,7 +476,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_path",
-        default="../../llms/"
+        default=None
     )
     parser.add_argument(
         "--model_name",

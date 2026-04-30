@@ -19,7 +19,7 @@ def summarize(
 ):  # runs = None -> all runs
     summaries = []
     uncompressed = []
-    with open(RESULTS_DIR / dir_name / runs[0] /  'params.json', "r") as f:
+    with open(RESULTS_DIR / dir_name / runs[0] /  '000_params.json', "r") as f:
         params = json.load(f)
         print(params)
     for run_dir in (RESULTS_DIR / dir_name if not abs_path else dir_name).iterdir():

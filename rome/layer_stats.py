@@ -94,14 +94,22 @@ def layer_stats(
     """
 
     def get_ds():
-        # Load_From_File
-        from datasets import Dataset
-        raw_ds = Dataset.from_file('/science/lxp/caches/wikipedia/downloads/wikipedia-train.arrow')
-        raw_ds = {'train': raw_ds}
-        # raw_ds = load_dataset(
-        #     ds_name,
-        #     dict(wikitext="wikitext-103-raw-v1", wikipedia="20220301.en")[ds_name]
-        # )
+        import glob
+        from datasets import Dataset, concatenate_datasets
+        _WIKI_DISK_CACHE = os.path.expanduser(
+            "~/.cache/huggingface/wikipedia/20220301.en/2.0.0/"
+            "d41137e149b2ea90eead07e7e3f805119a8c22dd1d5b61651af8e3e3ee736001"
+        )
+        if ds_name == "wikipedia" and os.path.isdir(_WIKI_DISK_CACHE):
+            arrow_files = sorted(glob.glob(
+                os.path.join(_WIKI_DISK_CACHE, "wikipedia-train-*.arrow")
+            ))
+            raw_ds = {"train": concatenate_datasets([Dataset.from_file(f) for f in arrow_files])}
+        else:
+            raw_ds = load_dataset(
+                ds_name,
+                dict(wikitext="wikitext-103-raw-v1", wikipedia="20220301.en")[ds_name],
+            )
         if hasattr(model.config, 'n_positions'):
             maxlen = model.config.n_positions
         elif hasattr(model.config, 'max_sequence_length'):
